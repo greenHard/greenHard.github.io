@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="canal、zookeeper,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="安装JDK 上传jdk-8u181-linux-i586.tar.gz到/usr/local目录下  1$ cd /usr/local  解压文件  1$ tar -zxvf jdk-8u181-linux-i586.tar.gz  配置环境变量  12$ vi /etc/profile# 在文件末尾加上下面几段话 1234JAVA_HOME=/usr/local/jdk1.8.0_181CLAS">
+<meta name="keywords" content="canal、zookeeper">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Canal HA搭建">
+<meta property="og:url" content="http://yoursite.com/2019/04/27/Canal HA搭建/index.html">
+<meta property="og:site_name" content="张雨阳的个人博客">
+<meta property="og:description" content="安装JDK 上传jdk-8u181-linux-i586.tar.gz到/usr/local目录下  1$ cd /usr/local  解压文件  1$ tar -zxvf jdk-8u181-linux-i586.tar.gz  配置环境变量  12$ vi /etc/profile# 在文件末尾加上下面几段话 1234JAVA_HOME=/usr/local/jdk1.8.0_181CLAS">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2019/04/27/Canal%20HA搭建/1.png">
+<meta property="og:image" content="http://yoursite.com/2019/04/27/Canal%20HA搭建/2.png">
+<meta property="og:image" content="http://yoursite.com/2019/04/27/Canal%20HA搭建/3.png">
+<meta property="og:updated_time" content="2019-04-27T06:31:23.113Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Canal HA搭建">
+<meta name="twitter:description" content="安装JDK 上传jdk-8u181-linux-i586.tar.gz到/usr/local目录下  1$ cd /usr/local  解压文件  1$ tar -zxvf jdk-8u181-linux-i586.tar.gz  配置环境变量  12$ vi /etc/profile# 在文件末尾加上下面几段话 1234JAVA_HOME=/usr/local/jdk1.8.0_181CLAS">
+<meta name="twitter:image" content="http://yoursite.com/2019/04/27/Canal%20HA搭建/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/04/27/Canal HA搭建/">
+
+
+
+
+
+  <title>Canal HA搭建 | 张雨阳的个人博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">张雨阳的个人博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-schedule">
+          <a href="/schedule/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>
+            
+            日程表
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/04/27/Canal HA搭建/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="铜豌豆6号">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/timg.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="张雨阳的个人博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Canal HA搭建</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-27T09:19:00+08:00">
+                2019-04-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/从小白到大白系列-中间件/" itemprop="url" rel="index">
+                    <span itemprop="name">从小白到大白系列-中间件</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/04/27/Canal HA搭建/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/04/27/Canal HA搭建/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2019/04/27/Canal HA搭建/" class="leancloud_visitors" data-flag-title="Canal HA搭建">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="安装JDK"><a href="#安装JDK" class="headerlink" title="安装JDK"></a>安装JDK</h2><ol>
+<li>上传jdk-8u181-linux-i586.tar.gz到/usr/local目录下</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /usr/<span class="built_in">local</span></span><br></pre></td></tr></table></figure>
+<ol>
+<li>解压文件</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ tar -zxvf jdk-8u181-linux-i586.tar.gz</span><br></pre></td></tr></table></figure>
+<ol>
+<li>配置环境变量</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ vi /etc/profile</span><br><span class="line"><span class="comment"># 在文件末尾加上下面几段话</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">JAVA_HOME=/usr/local/jdk1.8.0_181</span><br><span class="line">CLASSPATH=$JAVA_HOME/lib/</span><br><span class="line">PATH=$PATH:$JAVA_HOME/bin</span><br><span class="line">export PATH JAVA_HOME CLASSPATH</span><br></pre></td></tr></table></figure>
+<ol>
+<li>重新加载配置文件</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">source</span> /etc/profile</span><br></pre></td></tr></table></figure>
+<ol>
+<li>验证</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ java -verion</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/27/Canal HA搭建/1.png" alt></p>
+<h2 id="安装MySQL"><a href="#安装MySQL" class="headerlink" title="安装MySQL"></a>安装MySQL</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看存在的mysql</span></span><br><span class="line">$ rpm -qa | grep mysql</span><br><span class="line"><span class="comment"># 我们就通过 rpm -e 命令 或者 rpm -e --nodeps 命令来卸载掉</span></span><br><span class="line">$ rpm -e mysql</span><br><span class="line">$ rpm -e --nodeps mysql</span><br><span class="line"><span class="comment"># ----------------------</span></span><br><span class="line"><span class="comment"># 查看mysql可以下载的版本</span></span><br><span class="line">$ yum list | grep mysql</span><br><span class="line"><span class="comment"># 安装mySQL</span></span><br><span class="line">$ yum install -y mysql-server mysql mysql-deve</span><br><span class="line"><span class="comment"># 启动mySQL </span></span><br><span class="line">$ service mysqld start</span><br><span class="line"><span class="comment"># 设置开机启动</span></span><br><span class="line">$ chkconfig mysqld on</span><br><span class="line"><span class="comment"># 为root账号设置密码</span></span><br><span class="line">$ /usr/bin/mysqladmin -u root password <span class="string">'new-password'</span></span><br><span class="line"><span class="comment"># 登录mysql</span></span><br><span class="line">$ mysql -uroot -p<span class="string">'password'</span></span><br></pre></td></tr></table></figure>
+<h2 id="zookeeper集群搭建"><a href="#zookeeper集群搭建" class="headerlink" title="zookeeper集群搭建"></a>zookeeper集群搭建</h2><blockquote>
+<p>zookeeper集群的搭建需要三台虚拟机</p>
+</blockquote>
+<ol>
+<li>上传解压</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 上传zookeeper-3.4.10.tar.gz到/usr/local目录下</span></span><br><span class="line">$ <span class="built_in">cd</span> /usr/<span class="built_in">local</span></span><br><span class="line"><span class="comment"># 解压</span></span><br><span class="line">$ tar -zxvf zookeeper-3.4.10.tar.gz</span><br></pre></td></tr></table></figure>
+<ol>
+<li>编辑zookeeper配置文件</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /usr/<span class="built_in">local</span>/zookeeper-3.4.10/conf</span><br><span class="line"><span class="comment"># 拷贝配置文件</span></span><br><span class="line">$ cp zoo_sample.cfg zoo.cfg</span><br><span class="line"><span class="comment"># 编辑配置文件</span></span><br><span class="line">$ vi zoo.cfg</span><br></pre></td></tr></table></figure>
+<p><strong>添加如下内容</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># server.id=ip:port1:port2</span><br><span class="line">server.10=10.153.1.208:2888:3181</span><br><span class="line">server.11=10.153.0.183:2888:3181</span><br><span class="line">server.12=10.153.0.38:2888:3181</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li><p>id: 每个机器的唯一标识不能重复</p>
+</li>
+<li><p>ip: 各个机器的ip地址</p>
+</li>
+<li><p>port1: leader和follower之间数据同步的端口号</p>
+</li>
+<li><p>port2: leader选举专用的端口号</p>
+</li>
+</ul>
+<ol>
+<li>添加myid文件</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建目录</span></span><br><span class="line">$ mkdir -p /tmp/zookeeper</span><br><span class="line"><span class="comment"># 添加myid配置文件</span></span><br><span class="line">$ vi /tmp/zookeeper/myid</span><br></pre></td></tr></table></figure>
+<p><strong>添加如下内容</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">id</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>id值对应zookeeper配置文件中服务器的ip对应id值</strong></p>
+</blockquote>
+<ol>
+<li>启动集群</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /usr/<span class="built_in">local</span>/zookeeper-3.4.10/bin</span><br><span class="line"><span class="comment"># 启动</span></span><br><span class="line">$ sh zkServer.sh start</span><br><span class="line"><span class="comment"># 查看启动日志</span></span><br><span class="line">$ tail -100 zookeeper.out</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/27/Canal HA搭建/2.png" alt></p>
+<h2 id="Canal集群搭建"><a href="#Canal集群搭建" class="headerlink" title="Canal集群搭建"></a>Canal集群搭建</h2><h3 id="MySQL配置修改"><a href="#MySQL配置修改" class="headerlink" title="MySQL配置修改"></a>MySQL配置修改</h3><ol>
+<li>开启binlog的写入功能</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ vi /etc/my.cnf</span><br></pre></td></tr></table></figure>
+<p>修改<strong>如下配置</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line">datadir=/var/lib/mysql</span><br><span class="line">socket=/var/lib/mysql/mysql.sock</span><br><span class="line">symbolic-links=0</span><br><span class="line">log-bin=mysql-bin #添加这一行就ok  </span><br><span class="line">binlog-format=ROW #选择row模式</span><br><span class="line">server_id=1  #配置mysql replaction需要定义，不能和canal的slaveId重复   </span><br><span class="line"></span><br><span class="line">[mysqld_safe]</span><br><span class="line">log-error=/var/log/mysqld.log</span><br><span class="line">pid-file=/var/run/mysqld/mysqld.pid</span><br></pre></td></tr></table></figure></p>
+<ol>
+<li>重启MySQL</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ service mysqld start</span><br></pre></td></tr></table></figure>
+<ol>
+<li>添加canal用户,并授权</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 登录数据库</span></span><br><span class="line">$ mysql -uroot -p123456</span><br><span class="line"><span class="comment"># 创建用户</span></span><br><span class="line">CREATE USER canal IDENTIFIED BY <span class="string">'canal'</span>;</span><br><span class="line"><span class="comment"># 授权</span></span><br><span class="line">GRANT SELECT, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO <span class="string">'canal'</span>@<span class="string">'%'</span>;</span><br><span class="line"><span class="comment"># 刷新</span></span><br><span class="line">FLUSH PRIVILEGES;</span><br><span class="line"><span class="comment"># 查询权限</span></span><br><span class="line">show grants <span class="keyword">for</span> <span class="string">'canal'</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="Canal-HA搭建"><a href="#Canal-HA搭建" class="headerlink" title="Canal HA搭建"></a>Canal HA搭建</h3><blockquote>
+<p>canal 集群操作二台机器</p>
+</blockquote>
+<ol>
+<li>上传解压</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 上传canal.deployer-1.1.0.tar.gz到/usr/local目录下</span></span><br><span class="line">$ <span class="built_in">cd</span> /usr/<span class="built_in">local</span></span><br><span class="line"><span class="comment"># 创建目录</span></span><br><span class="line">$ mkdir canal</span><br><span class="line"><span class="comment"># 解压</span></span><br><span class="line">$ tar -zxvf canal.deployer-1.1.0.tar.gz -C canal</span><br></pre></td></tr></table></figure>
+<ol>
+<li>配置instance.properties</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 进入example目录</span></span><br><span class="line">$ <span class="built_in">cd</span> canal/conf/example</span><br><span class="line"><span class="comment"># 编辑配置文件</span></span><br><span class="line">$ vi instance.properties</span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改如下配置文件,地址是MySQL的地址</span></span><br><span class="line">instance.master.address=10.153.1.208:3306</span><br></pre></td></tr></table></figure>
+<ol>
+<li>配置canal全局配置文件</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 进入配置文件目录</span></span><br><span class="line">$ <span class="built_in">cd</span> /usr/<span class="built_in">local</span>/canal/conf</span><br><span class="line"><span class="comment"># 编辑配置文件</span></span><br><span class="line">$ canal.properties</span><br></pre></td></tr></table></figure>
+<p><strong>修改内容如下</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># canal的id,二台服务器不能相同</span><br><span class="line">canal.id= 2</span><br><span class="line"># zookeeper集群的地址</span><br><span class="line">canal.zkServers=10.153.1.208:2181,10.153.0.183:2181,10.153.0.38:2181</span><br><span class="line"># 多核无需关闭,单核需关闭</span><br><span class="line">canal.instance.parser.parallel = false</span><br><span class="line"># 修改配置文件为default-instance.xml 支持HA模式</span><br><span class="line">#canal.instance.global.spring.xml = classpath:spring/file-instance.xml</span><br><span class="line">canal.instance.global.spring.xml = classpath:spring/default-instance.xml</span><br></pre></td></tr></table></figure></p>
+<ol>
+<li>启动canal</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /usr/<span class="built_in">local</span>/canal/bin</span><br><span class="line"><span class="comment"># 启动canal</span></span><br><span class="line">$ sh startup.sh</span><br><span class="line"><span class="comment"># 查看日志</span></span><br><span class="line">$ tail -100 ../logs/canal/canal.log</span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/27/Canal HA搭建/3.png" alt></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/canal、zookeeper/" rel="tag"># canal、zookeeper</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/26/SpringBoot-MVC基础/" rel="next" title="SpringBoot MVC学习">
+                <i class="fa fa-chevron-left"></i> SpringBoot MVC学习
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/27/SpringBoot-MyBatis/" rel="prev" title="SpringBoot-MyBatis">
+                SpringBoot-MyBatis <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/timg.png" alt="铜豌豆6号">
+            
+              <p class="site-author-name" itemprop="name">铜豌豆6号</p>
+              <p class="site-description motion-element" itemprop="description">安安静静的当一个码农</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装JDK"><span class="nav-number">1.</span> <span class="nav-text">安装JDK</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装MySQL"><span class="nav-number">2.</span> <span class="nav-text">安装MySQL</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#zookeeper集群搭建"><span class="nav-number">3.</span> <span class="nav-text">zookeeper集群搭建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Canal集群搭建"><span class="nav-number">4.</span> <span class="nav-text">Canal集群搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL配置修改"><span class="nav-number">4.1.</span> <span class="nav-text">MySQL配置修改</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Canal-HA搭建"><span class="nav-number">4.2.</span> <span class="nav-text">Canal HA搭建</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">铜豌豆6号</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://铜豌豆6号.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://yoursite.com/2019/04/27/Canal HA搭建/';
+          this.page.identifier = '2019/04/27/Canal HA搭建/';
+          this.page.title = 'Canal HA搭建';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://铜豌豆6号.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("OnzY68wYNuEreJmz6UKQ6WDi-gzGzoHsz", "1B6bWk99L50mdp8qQsktSQWK");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>

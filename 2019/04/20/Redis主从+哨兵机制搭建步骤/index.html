@@ -79,19 +79,19 @@
 
 
 
-<meta name="description" content="环境说明   主机名 系统 IP地址     linux-node1 CentOS release 7.2 xx.xxx.xxx.01   linux-node2 CentOS release 7.2 xx.xxx.xxx.02   linux-node3 CentOS release 7.2 xx.xxx.xxx.03    版本说明   软件名称 使用包名称     Redis redis-5">
+<meta name="description" content="环境说明    主机名 系统 IP地址     linux-node1 CentOS release 7.2 xx.xxx.xxx.01   linux-node2 CentOS release 7.2 xx.xxx.xxx.02   linux-node3 CentOS release 7.2 xx.xxx.xxx.03     版本说明    软件名称 使用包名称     Redis redi">
 <meta name="keywords" content="redis、sentinel">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis主从+哨兵机制搭建步骤">
 <meta property="og:url" content="http://yoursite.com/2019/04/20/Redis主从+哨兵机制搭建步骤/index.html">
 <meta property="og:site_name" content="张雨阳的个人博客">
-<meta property="og:description" content="环境说明   主机名 系统 IP地址     linux-node1 CentOS release 7.2 xx.xxx.xxx.01   linux-node2 CentOS release 7.2 xx.xxx.xxx.02   linux-node3 CentOS release 7.2 xx.xxx.xxx.03    版本说明   软件名称 使用包名称     Redis redis-5">
+<meta property="og:description" content="环境说明    主机名 系统 IP地址     linux-node1 CentOS release 7.2 xx.xxx.xxx.01   linux-node2 CentOS release 7.2 xx.xxx.xxx.02   linux-node3 CentOS release 7.2 xx.xxx.xxx.03     版本说明    软件名称 使用包名称     Redis redi">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://yoursite.com/2019/04/20/Redis主从+哨兵机制搭建步骤/redis/5.jpg">
 <meta property="og:updated_time" content="2019-04-27T03:38:55.497Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Redis主从+哨兵机制搭建步骤">
-<meta name="twitter:description" content="环境说明   主机名 系统 IP地址     linux-node1 CentOS release 7.2 xx.xxx.xxx.01   linux-node2 CentOS release 7.2 xx.xxx.xxx.02   linux-node3 CentOS release 7.2 xx.xxx.xxx.03    版本说明   软件名称 使用包名称     Redis redis-5">
+<meta name="twitter:description" content="环境说明    主机名 系统 IP地址     linux-node1 CentOS release 7.2 xx.xxx.xxx.01   linux-node2 CentOS release 7.2 xx.xxx.xxx.02   linux-node3 CentOS release 7.2 xx.xxx.xxx.03     版本说明    软件名称 使用包名称     Redis redi">
 <meta name="twitter:image" content="http://yoursite.com/2019/04/20/Redis主从+哨兵机制搭建步骤/redis/5.jpg">
 
 
@@ -375,7 +375,8 @@
       
 
       
-        <h2 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h2><table>
+        <h2 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>主机名</th>
@@ -401,7 +402,9 @@
 </tr>
 </tbody>
 </table>
-<h2 id="版本说明"><a href="#版本说明" class="headerlink" title="版本说明"></a>版本说明</h2><table>
+</div>
+<h2 id="版本说明"><a href="#版本说明" class="headerlink" title="版本说明"></a>版本说明</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>软件名称</th>
@@ -415,6 +418,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>Redis版本: 5.0.4</p>
 <p><img src="/2019/04/20/Redis主从+哨兵机制搭建步骤/redis\5.jpg" alt></p>
 <h2 id="安装过程"><a href="#安装过程" class="headerlink" title="安装过程"></a>安装过程</h2><h3 id="公共操作"><a href="#公共操作" class="headerlink" title="公共操作"></a>公共操作</h3><blockquote>
@@ -584,7 +588,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -595,7 +599,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -606,7 +610,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -969,6 +973,28 @@
   
 
   
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
 
   
 

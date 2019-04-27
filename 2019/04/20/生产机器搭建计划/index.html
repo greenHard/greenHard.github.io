@@ -79,13 +79,13 @@
 
 
 
-<meta name="description" content="前言由于公司近期需要架构升级，给到了三台新的机器。主要的目的是想解决一下我们之前项目中存在的一些问题。比如文件存储、缓存、消息队列这些问题。下面的几篇博客将记录我整个搭建的过程。后续还有一些用法的博客，我也是边学边弄。不足之处，欢迎一起探讨。 服务器分配和基本配置   物理IP CPU型号 CPU的个数 系统版本 内存     xx.xxx.xxx.xx Intel(R) Xeon(R) CPU">
+<meta name="description" content="前言由于公司近期需要架构升级，给到了三台新的机器。主要的目的是想解决一下我们之前项目中存在的一些问题。比如文件存储、缓存、消息队列这些问题。下面的几篇博客将记录我整个搭建的过程。后续还有一些用法的博客，我也是边学边弄。不足之处，欢迎一起探讨。 服务器分配和基本配置    物理IP CPU型号 CPU的个数 系统版本 内存     xx.xxx.xxx.xx Intel(R) Xeon(R) CPU">
 <meta name="keywords" content="zookeeper、kafka、dfs、redis">
 <meta property="og:type" content="article">
 <meta property="og:title" content="生产机器搭建计划">
 <meta property="og:url" content="http://yoursite.com/2019/04/20/生产机器搭建计划/index.html">
 <meta property="og:site_name" content="张雨阳的个人博客">
-<meta property="og:description" content="前言由于公司近期需要架构升级，给到了三台新的机器。主要的目的是想解决一下我们之前项目中存在的一些问题。比如文件存储、缓存、消息队列这些问题。下面的几篇博客将记录我整个搭建的过程。后续还有一些用法的博客，我也是边学边弄。不足之处，欢迎一起探讨。 服务器分配和基本配置   物理IP CPU型号 CPU的个数 系统版本 内存     xx.xxx.xxx.xx Intel(R) Xeon(R) CPU">
+<meta property="og:description" content="前言由于公司近期需要架构升级，给到了三台新的机器。主要的目的是想解决一下我们之前项目中存在的一些问题。比如文件存储、缓存、消息队列这些问题。下面的几篇博客将记录我整个搭建的过程。后续还有一些用法的博客，我也是边学边弄。不足之处，欢迎一起探讨。 服务器分配和基本配置    物理IP CPU型号 CPU的个数 系统版本 内存     xx.xxx.xxx.xx Intel(R) Xeon(R) CPU">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://yoursite.com/2019/04/20/生产机器搭建计划/zk/1.png">
 <meta property="og:image" content="http://yoursite.com/2019/04/20/生产机器搭建计划/zk/2.png">
@@ -96,7 +96,7 @@
 <meta property="og:updated_time" content="2019-04-27T03:37:42.115Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="生产机器搭建计划">
-<meta name="twitter:description" content="前言由于公司近期需要架构升级，给到了三台新的机器。主要的目的是想解决一下我们之前项目中存在的一些问题。比如文件存储、缓存、消息队列这些问题。下面的几篇博客将记录我整个搭建的过程。后续还有一些用法的博客，我也是边学边弄。不足之处，欢迎一起探讨。 服务器分配和基本配置   物理IP CPU型号 CPU的个数 系统版本 内存     xx.xxx.xxx.xx Intel(R) Xeon(R) CPU">
+<meta name="twitter:description" content="前言由于公司近期需要架构升级，给到了三台新的机器。主要的目的是想解决一下我们之前项目中存在的一些问题。比如文件存储、缓存、消息队列这些问题。下面的几篇博客将记录我整个搭建的过程。后续还有一些用法的博客，我也是边学边弄。不足之处，欢迎一起探讨。 服务器分配和基本配置    物理IP CPU型号 CPU的个数 系统版本 内存     xx.xxx.xxx.xx Intel(R) Xeon(R) CPU">
 <meta name="twitter:image" content="http://yoursite.com/2019/04/20/生产机器搭建计划/zk/1.png">
 
 
@@ -381,7 +381,8 @@
 
       
         <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>由于公司近期需要架构升级，给到了三台新的机器。主要的目的是想解决一下我们之前项目中存在的一些问题。比如文件存储、缓存、消息队列这些问题。下面的几篇博客将记录我整个搭建的过程。后续还有一些用法的博客，我也是边学边弄。不足之处，欢迎一起探讨。</p>
-<h2 id="服务器分配和基本配置"><a href="#服务器分配和基本配置" class="headerlink" title="服务器分配和基本配置"></a>服务器分配和基本配置</h2><table>
+<h2 id="服务器分配和基本配置"><a href="#服务器分配和基本配置" class="headerlink" title="服务器分配和基本配置"></a>服务器分配和基本配置</h2><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>物理IP</th>
@@ -415,6 +416,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h2 id="服务器部署方案"><a href="#服务器部署方案" class="headerlink" title="服务器部署方案"></a>服务器部署方案</h2><h3 id="技术方案选择"><a href="#技术方案选择" class="headerlink" title="技术方案选择"></a>技术方案选择</h3><h4 id="1-分布式协调-Zookeeper"><a href="#1-分布式协调-Zookeeper" class="headerlink" title="1. 分布式协调-Zookeeper"></a>1. 分布式协调-Zookeeper</h4><h5 id="1-1-Zookeeper的介绍"><a href="#1-1-Zookeeper的介绍" class="headerlink" title="1.1  Zookeeper的介绍"></a>1.1  Zookeeper的介绍</h5><p>Zookeeper是大数据生态圈中的重要组件,如果你做过相关开发的话,应该经常能看到它的身影。其由雅虎开源并成为Apache的顶级项目。用一句话对其进行定义就是: 它是一套高吞吐的分布式协调系统。从中我们可以知道Zookeeper至少具有以下特点：</p>
 <ul>
 <li><p>Zookeeper的主要作用是为分布式系统提供协调服务，包括但不限于: 分布式锁、统一命名服务、配置管理、负载均衡、主控服务器选举以及主从切换等。</p>
@@ -480,7 +482,8 @@
 <h4 id="3-分布式文件存储-FastDFS"><a href="#3-分布式文件存储-FastDFS" class="headerlink" title="3. 分布式文件存储-FastDFS"></a>3. 分布式文件存储-FastDFS</h4><h5 id="3-1-FastDFS介绍"><a href="#3-1-FastDFS介绍" class="headerlink" title="3.1 FastDFS介绍"></a>3.1 FastDFS介绍</h5><p>FastDFS是一款类GoogleFS的开源分布式文件系统，它用纯C语言实现，支持Linux、FreeBSD、AIX等UNIX系统。它只能通过专有API对文件进行存取访问，不支持POSIX接口方式，不能mount使用。准确地讲，GoogleFS以及FastDFS、mogileFS、HDFS、TFS等类GoogleFS都不是系统级的分布式文件系统，而是应用级的分布式文件存储服务。</p>
 <p>FastDFS是为互联网应用量身定做的分布式文件系统，充分考虑了冗余备份、负载均衡、线性扩容等机制，并注重高可用、高性能等指标。和现有的类Google FS分布式文件系统相比，FastDFS的架构和设计理念有其独到之处，主要体现在轻量级、分组方式和对等结构三个方面。</p>
 <p>FastDFS是由国人余庆开发，其项目地址：<a href="https://link.jianshu.com/?t=https%3A%2F%2Fgithub.com%2Fhappyfish100" target="_blank" rel="noopener">https://github.com/happyfish100</a> 。</p>
-<h5 id="3-2-FS-比较"><a href="#3-2-FS-比较" class="headerlink" title="3.2  FS 比较"></a>3.2  FS 比较</h5><table>
+<h5 id="3-2-FS-比较"><a href="#3-2-FS-比较" class="headerlink" title="3.2  FS 比较"></a>3.2  FS 比较</h5><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>文件系统</th>
@@ -594,6 +597,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>开源协议说明:</p>
 <p>GPL: 不允许修改后和衍生的代码做为闭源的商业软件发布和销售，修改后该软件产品必须也采用GPL协议<br>GPL V2：修改文本的整体就必须按照GPL流通，不仅该修改文本的源码必须向社会公开，而且对于这种修改文本的流通不准许附加修改者自己作出的限制。<br>GPL V3：要求用户公布修改的源代码，还要求公布相关硬件。</p>
 <p>LGPL：更宽松的GPL。</p>
@@ -605,7 +609,8 @@
 <li>同时支持离线数据处理和实时数据处理</li>
 <li>Scale out：支持在线水平扩展</li>
 </ul>
-<h5 id="4-2-MQ对比"><a href="#4-2-MQ对比" class="headerlink" title="4.2 MQ对比"></a>4.2 MQ对比</h5><table>
+<h5 id="4-2-MQ对比"><a href="#4-2-MQ对比" class="headerlink" title="4.2 MQ对比"></a>4.2 MQ对比</h5><div class="table-container">
+<table>
 <thead>
 <tr>
 <th style="text-align:center">特性</th>
@@ -674,6 +679,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <ul>
 <li><p>ActiveMQ之前用的比较多，但是现在确实大家用的不多了，没经过大规模吞吐量场景的验证，社区活跃度很低。</p>
 </li>
@@ -718,8 +724,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2019/03/16/Hexo+Github Pages搭建博客和配置/" rel="next" title="Hexo+Github Pages搭建博客和配置">
-                <i class="fa fa-chevron-left"></i> Hexo+Github Pages搭建博客和配置
+              <a href="/2019/03/20/数据结构与算法学习笔记-chapter1/" rel="next" title="数据结构与算法学习笔记(一)">
+                <i class="fa fa-chevron-left"></i> 数据结构与算法学习笔记(一)
               </a>
             
           </div>
@@ -819,7 +825,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -830,7 +836,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -841,7 +847,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -1204,6 +1210,28 @@
   
 
   
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
 
   
 
