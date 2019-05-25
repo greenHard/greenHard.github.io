@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="kafka、MQ,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="在了解了消费者与消费组之间的概念之后，我们就可以着手进行消费者客户端的开发了。在 Kafka 的历史中，消费者客户端同生产者客户端一样也经历了两个大版本：第一个是于 Kafka 开源之初使用 Scala 语言编写的客户端，我们可以称之为旧消费者客户端（Old Consumer）或 Scala 消费者客户端；第二个是从 Kafka 0.9.x 版本开始推出的使用 Java 编写的客户端，我们可以称之">
+<meta name="keywords" content="kafka、MQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kafka消费者客户端开发">
+<meta property="og:url" content="http://yoursite.com/2019/05/03/Kafka系列/7.Kafka消费者开发/index.html">
+<meta property="og:site_name" content="greenHard的个人主页">
+<meta property="og:description" content="在了解了消费者与消费组之间的概念之后，我们就可以着手进行消费者客户端的开发了。在 Kafka 的历史中，消费者客户端同生产者客户端一样也经历了两个大版本：第一个是于 Kafka 开源之初使用 Scala 语言编写的客户端，我们可以称之为旧消费者客户端（Old Consumer）或 Scala 消费者客户端；第二个是从 Kafka 0.9.x 版本开始推出的使用 Java 编写的客户端，我们可以称之">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-05-25T04:40:50.785Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kafka消费者客户端开发">
+<meta name="twitter:description" content="在了解了消费者与消费组之间的概念之后，我们就可以着手进行消费者客户端的开发了。在 Kafka 的历史中，消费者客户端同生产者客户端一样也经历了两个大版本：第一个是于 Kafka 开源之初使用 Scala 语言编写的客户端，我们可以称之为旧消费者客户端（Old Consumer）或 Scala 消费者客户端；第二个是从 Kafka 0.9.x 版本开始推出的使用 Java 编写的客户端，我们可以称之">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/03/Kafka系列/7.Kafka消费者开发/">
+
+
+
+
+
+  <title>Kafka消费者客户端开发 | greenHard的个人主页</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">greenHard的个人主页</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-schedule">
+          <a href="/schedule/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>
+            
+            日程表
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/03/Kafka系列/7.Kafka消费者开发/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="greenHard">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/timg.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="greenHard的个人主页">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Kafka消费者客户端开发</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-03T19:38:00+08:00">
+                2019-05-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Kafka学习笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">Kafka学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/05/03/Kafka系列/7.Kafka消费者开发/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/05/03/Kafka系列/7.Kafka消费者开发/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2019/05/03/Kafka系列/7.Kafka消费者开发/" class="leancloud_visitors" data-flag-title="Kafka消费者客户端开发">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在了解了消费者与消费组之间的概念之后，我们就可以着手进行消费者客户端的开发了。在 Kafka 的历史中，消费者客户端同生产者客户端一样也经历了两个大版本：第一个是于 Kafka 开源之初使用 Scala 语言编写的客户端，我们可以称之为旧消费者客户端（Old Consumer）或 Scala 消费者客户端；第二个是从 Kafka 0.9.x 版本开始推出的使用 Java 编写的客户端，我们可以称之为新消费者客户端（New Consumer）或 Java 消费者客户端，它弥补了旧客户端中存在的诸多设计缺陷。</p>
+<p>本节主要介绍目前流行的新消费者（Java 语言编写的）客户端，而旧消费者客户端已被淘汰，故不再做相应的介绍了。</p>
+<h2 id="客户端开发"><a href="#客户端开发" class="headerlink" title="客户端开发"></a>客户端开发</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.zhang.consumer;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.apache.kafka.clients.consumer.ConsumerConfig;</span><br><span class="line"><span class="keyword">import</span> org.apache.kafka.clients.consumer.ConsumerRecords;</span><br><span class="line"><span class="keyword">import</span> org.apache.kafka.clients.consumer.KafkaConsumer;</span><br><span class="line"><span class="keyword">import</span> org.apache.kafka.common.serialization.StringDeserializer;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.time.Duration;</span><br><span class="line"><span class="keyword">import</span> java.util.Collections;</span><br><span class="line"><span class="keyword">import</span> java.util.Properties;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.atomic.AtomicBoolean;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 基础Consumer</span></span><br><span class="line"><span class="comment"> * 1. 配置消费者客户端参数及创建相应的消费者实例。</span></span><br><span class="line"><span class="comment"> * 2. 订阅主题。</span></span><br><span class="line"><span class="comment"> * 3. 拉取消息并消费。</span></span><br><span class="line"><span class="comment"> * 4. 提交消费位移。</span></span><br><span class="line"><span class="comment"> * 5. 关闭消费者实例。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SimpleConsumerDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger LOG = LoggerFactory.getLogger(SimpleConsumerDemo.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> AtomicBoolean isRunning = <span class="keyword">new</span> AtomicBoolean(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 1. 配置消费者客户端参数及创建相应的消费者实例。</span></span><br><span class="line">        KafkaConsumer&lt;String, String&gt; consumer = <span class="keyword">new</span> KafkaConsumer&lt;&gt;(loadProp());</span><br><span class="line">        <span class="comment">// 2. 订阅主题</span></span><br><span class="line">        consumer.subscribe(Collections.singletonList(<span class="string">"test_consumer1_topic"</span>));</span><br><span class="line">        <span class="comment">// 3. 拉取消息并消费。</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">while</span> (isRunning.get()) &#123;</span><br><span class="line">                ConsumerRecords&lt;String, String&gt; records = consumer.poll(Duration.ofMillis(<span class="number">100</span>));</span><br><span class="line">                records.forEach(record -&gt;</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">//biz handler.</span></span><br><span class="line">                    LOG.info(<span class="string">"offset:&#123;&#125;"</span>, record.offset());</span><br><span class="line">                    LOG.info(<span class="string">"value:&#123;&#125;"</span>, record.value());</span><br><span class="line">                    LOG.info(<span class="string">"key:&#123;&#125;"</span>, record.key());</span><br><span class="line">                &#125;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            LOG.error(<span class="string">"出现了异常. "</span>, e);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="comment">// 5. 关闭消费者实例。</span></span><br><span class="line">            consumer.close();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> Properties <span class="title">loadProp</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Properties props = <span class="keyword">new</span> Properties();</span><br><span class="line">        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, <span class="string">"10.153.1.117:9092,10.153.1.128:9092,10.153.1.131:9092"</span>);</span><br><span class="line">        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());</span><br><span class="line">        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());</span><br><span class="line">        props.put(ConsumerConfig.GROUP_ID_CONFIG, <span class="string">"test_group4"</span>);</span><br><span class="line">        props.put(ConsumerConfig.CLIENT_ID_CONFIG, <span class="string">"consumer-client"</span>);</span><br><span class="line">        <span class="keyword">return</span> props;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="必要的参数配置"><a href="#必要的参数配置" class="headerlink" title="必要的参数配置"></a>必要的参数配置</h2><ul>
+<li><p><strong>bootstrap.servers</strong></p>
+<p>该参数的释义和生产者客户端 <code>KafkaProducer</code> 中的相同，用来指定连接 Kafka 集群所需的 broker 地址清单，具体内容形式为 host1:port1,host2:post，可以设置一个或多个地址，中间用逗号隔开，此参数的默认值为“”。注意这里并非需要设置集群中全部的 broker 地址，消费者会从现有的配置中查找到全部的 Kafka 集群成员。这里设置两个以上的 broker 地址信息，当其中任意一个宕机时，消费者仍然可以连接到 Kafka 集群上。</p>
+</li>
+<li><p><strong>group.id</strong></p>
+<p>消费者隶属的消费组的名称，默认值为“”。如果设置为空，则会报出异常：Exception in thread “main” org.apache.kafka.common.errors.InvalidGroupIdException: The configured groupId is invalid。一般而言，这个参数需要设置成具有一定的业务意义的名称。</p>
+</li>
+<li><p><strong>key.deserializer &amp; value.deserializer</strong></p>
+<p>与生产者客户端 <code>KafkaProducer</code> 中的<code>key.serializer</code>和<code>value.serializer</code> 参数对应。消费者从 broker 端获取的消息格式都是字节数组（byte[]）类型，所以需要执行相应的反序列化操作才能还原成原有的对象格式。这两个参数分别用来指定消息中 key 和 value 所需反序列化操作的反序列化器，这两个参数无默认值。注意这里必须填写反序列化器类的全限定名，例如：<code>org.apache.kafka.common.serialization.StringDeserializer</code></p>
+</li>
+</ul>
+<h2 id="订阅主题和分区"><a href="#订阅主题和分区" class="headerlink" title="订阅主题和分区"></a>订阅主题和分区</h2><p>在创建好消费者之后，我们就需要为该消费者订阅相关的主题了。一个消费者可以订阅一个或多个主题，既可以以集合的形式订阅多个主题，也可以以正则表达式的形式订阅特定模式的主题。subscribe 的几个重载方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(Collection&lt;String&gt; topics, ConsumerRebalanceListener listener)</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(Collection&lt;String&gt; topics)</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(Pattern pattern, ConsumerRebalanceListener listener)</span></span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">subscribe</span><span class="params">(Pattern pattern)</span></span></span><br></pre></td></tr></table></figure>
+<p>对于消费者使用集合的方式（subscribe(Collection)）来订阅主题而言，比较容易理解，订阅了什么主题就消费什么主题中的消息。如果前后两次订阅了不同的主题，那么消费者以最后一次的为准。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">consumer.subscribe(Arrays.asList(topic1));</span><br><span class="line">consumer.subscribe(Arrays.asList(topic2));</span><br></pre></td></tr></table></figure>
+<p>上面的示例中，最终消费者订阅的是 topic2，而不是 topic1，也不是 topic1 和 topic2 的并集。</p>
+<p>如果消费者采用的是正则表达式的方式（subscribe(Pattern)）订阅，在之后的过程中，如果有人又创建了新的主题，并且主题的名字与正则表达式相匹配，那么这个消费者就可以消费到新添加的主题中的消息。如果应用程序需要消费多个主题，并且可以处理不同的类型，那么这种订阅方式就很有效。在 Kafka 和其他系统之间进行数据复制时，这种正则表达式的方式就显得很常见。正则表达式的方式订阅的示例如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">consumer.subscribe(Pattern.compile(<span class="string">"topic-.*"</span>));</span><br></pre></td></tr></table></figure>
+<p>subscribe 的重载方法中有一个参数类型是 ConsumerRebalance- Listener，这个是用来设置相应的再均衡监听器的。</p>
+<p>消费者不仅可以通过 <code>KafkaConsumer.subscribe()</code> 方法订阅主题，还可以直接订阅某些主题的特定分区，在 <code>KafkaConsumer</code> 中还提供了一个 assign() 方法来实现这些功能，此方法的具体定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">assign</span><span class="params">(Collection&lt;TopicPartition&gt; partitions)</span></span></span><br></pre></td></tr></table></figure>
+<p>这个方法只接受一个参数 partitions，用来指定需要订阅的分区集合。这里补充说明一下 TopicPartition 类，在 Kafka 的客户端中，它用来表示分区，这个类的部分内容如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">TopicPartition</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> partition;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String topic;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TopicPartition</span><span class="params">(String topic, <span class="keyword">int</span> partition)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.partition = partition;</span><br><span class="line">        <span class="keyword">this</span>.topic = topic;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">partition</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> partition;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">topic</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> topic;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//省略hashCode()、equals()和toString()方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>TopicPartition</code> 类只有2个属性：topic 和 partition，分别代表分区所属的主题和自身的分区编号，这个类可以和我们通常所说的主题—分区的概念映射起来。</p>
+<p>这里只订阅 topic-demo 主题中分区编号为0的分区，相关代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">consumer.assign(Arrays.asList(<span class="keyword">new</span> TopicPartition(<span class="string">"topic-demo"</span>, <span class="number">0</span>)));</span><br></pre></td></tr></table></figure>
+<p>有读者会有疑问：如果我们事先并不知道主题中有多少个分区怎么办？<code>KafkaConsumer</code> 中的 partitionsFor() 方法可以用来查询指定主题的元数据信息，partitionsFor() 方法的具体定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> List&lt;PartitionInfo&gt; <span class="title">partitionsFor</span><span class="params">(String topic)</span></span></span><br></pre></td></tr></table></figure>
+<p>其中 PartitionInfo 类型即为主题的分区元数据信息，此类的主要结构如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PartitionInfo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> String topic;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> partition;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Node leader;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Node[] replicas;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Node[] inSyncReplicas;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Node[] offlineReplicas;</span><br><span class="line">	<span class="comment">//这里省略了构造函数、属性提取、toString等方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>PartitionInfo</code>类中的属性 topic 表示主题名称，partition 代表分区编号，leader 代表分区的 leader 副本所在的位置，replicas 代表分区的 AR 集合，inSyncReplicas 代表分区的 ISR 集合，offlineReplicas 代表分区的 OSR 集合。 通过 partitionFor() 方法的协助，我们可以通过 assign() 方法来实现订阅主题（全部分区）的功能，示例参考如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">List&lt;TopicPartition&gt; partitions = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">List&lt;PartitionInfo&gt; partitionInfos = consumer.partitionsFor(topic);</span><br><span class="line"><span class="keyword">if</span> (partitionInfos != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (PartitionInfo tpInfo : partitionInfos) &#123;</span><br><span class="line">        partitions.add(<span class="keyword">new</span> TopicPartition(tpInfo.topic(), tpInfo.partition()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">consumer.assign(partitions);</span><br></pre></td></tr></table></figure>
+<p>既然有订阅，那么就有取消订阅，可以使用 <code>KafkaConsumer</code> 中的 unsubscribe() 方法来取消主题的订阅。这个方法既可以取消通过 subscribe(Collection) 方式实现的订阅，也可以取消通过 subscribe(Pattern) 方式实现的订阅，还可以取消通过 assign(Collection) 方式实现的订阅。示例代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">consumer.unsubscribe();</span><br></pre></td></tr></table></figure>
+<p>如果将 subscribe(Collection) 或 assign(Collection) 中的集合参数设置为空集合，那么作用等同于 unsubscribe() 方法，下面示例中的三行代码的效果相同：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">consumer.unsubscribe();</span><br><span class="line">consumer.subscribe(<span class="keyword">new</span> ArrayList&lt;String&gt;());</span><br><span class="line">consumer.assign(<span class="keyword">new</span> ArrayList&lt;TopicPartition&gt;());</span><br></pre></td></tr></table></figure>
+<p>如果没有订阅任何主题或分区，那么再继续执行消费程序的时候会报出 IllegalStateException 异常：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.IllegalStateException: Consumer is not subscribed to any topics or assigned any partitions</span><br></pre></td></tr></table></figure>
+<p>集合订阅的方式 subscribe(Collection)、正则表达式订阅的方式 subscribe(Pattern) 和指定分区的订阅方式 assign(Collection) 分表代表了三种不同的订阅状态：AUTO_TOPICS、AUTO_PATTERN 和 USER_ASSIGNED（如果没有订阅，那么订阅状态为 NONE）。然而这三种状态是互斥的，在一个消费者中只能使用其中的一种，否则会报出 IllegalStateException 异常：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.IllegalStateException: Subscription to topics, partitions and pattern are mutually exclusive.</span><br></pre></td></tr></table></figure>
+<p>通过 subscribe() 方法订阅主题具有消费者自动再均衡的功能，在多个消费者的情况下可以根据分区分配策略来自动分配各个消费者与分区的关系。当消费组内的消费者增加或减少时，分区分配关系会自动调整，以实现消费负载均衡及故障自动转移。<strong>而通过 assign() 方法订阅分区时，是不具备消费者自动均衡的功能的</strong>，其实这一点从 assign() 方法的参数中就可以看出端倪，两种类型的 subscribe() 都有 <code>ConsumerRebalanceListener</code> 类型参数的方法，而 assign() 方法却没有。</p>
+<h2 id="重要的参数配置"><a href="#重要的参数配置" class="headerlink" title="重要的参数配置"></a>重要的参数配置</h2><h3 id="fetch-min-bytes"><a href="#fetch-min-bytes" class="headerlink" title="fetch.min.bytes"></a>fetch.min.bytes</h3><p>此属性允许消费者 在获取记录时指定它希望从broker接收的最小数据量。如果broker接收来自消费者的记录请求，但新记录的字节数小于<code>min.fetch.bytes</code>，则broker将等待更多消息可用，然后再将记录发送回消费者。这减少了消费者和broker的负担，因为在主题没有太多新活动（或者当天的活动时间较少）的情况下，他们必须处理较少的来回消息。如果消费者在没有太多可用数据时使用过多CPU，或者在拥有大量消费者时减少代理的负载，则需要将此参数设置为高于默认值。</p>
+<h3 id="fetch-max-wait-ms"><a href="#fetch-max-wait-ms" class="headerlink" title="fetch.max.wait.ms"></a>fetch.max.wait.ms</h3><p>通过设置<code>fetch.min.bytes</code>，您可以告诉Kafka在响应消费者之前等待有足够的数据发送。 <code>fetch.max.wait.ms</code>允许您控制等待的时间。默认情况下，Kafka将等待500毫秒。如果没有足够的数据流入Kafka主题以满足返回的最小数据量，则会导致高达500毫秒的额外延迟。如果要限制潜在延迟（通常由于SLA控制应用程序的最大延迟），可以将<code>fetch.max.wait.ms</code>设置为较低的值。如果将<code>fetch.max.wait.ms</code>设置为100 ms并将<code>fetch.min.bytes</code>设置为1 MB，Kafka将接收来自使用者的提取请求，并在数据返回1 MB或100之后响应数据ms，先发生者。</p>
+<h3 id="max-partition-fetch-bytes"><a href="#max-partition-fetch-bytes" class="headerlink" title="max.partition.fetch.bytes"></a>max.partition.fetch.bytes</h3><p>此属性控制服务器将为每个分区返回的最大字节数。默认值为1 MB，这意味着当KafkaConsumer.poll()返回ConsumerRecords时，记录对象最多将使用分配给使用者的每个分区的<code>max.partition.fetch.bytes</code>。因此，如果一个主题有20个分区，并且您有5个消费者，则每个消费者需要有4 MB的内存可用于消费者记录。</p>
+<h3 id="session-timeout-ms"><a href="#session-timeout-ms" class="headerlink" title="session.timeout.ms"></a>session.timeout.ms</h3><ul>
+<li>消费者在被认为是活着的情况下与broker脱离联系的时间默认为3秒。如果超过<code>session.timeout.ms</code>而没有消费者向组协调器发送心跳，则认为它已经死亡，组协调器将触发使用者组的重新平衡，以将死区消费者的分区分配给组中的其他消费者。</li>
+<li><code>heartbeat.interval.ms</code>控制KafkaConsumer.poll()方法将心跳发送到组协调器的频率，而session.timeout.ms控制消费者可以多长时间不发送心跳。</li>
+<li>因此，这两个属性通常一起修改<code>heatbeat.interval.ms</code>必须低于<code>session.timeout.ms</code>，并且通常设置为超时值的三分之一。因此，如果<code>session.timeout.ms</code>为3秒，则<code>heartbeat.interval.ms</code>应为1秒。将<code>session.timeout.ms</code>设置为低于默认值将允许使用者组更快地检测并从故障中恢复，但是由于消费者花费更长时间来完成轮询循环或垃圾回收，也可能导致不必要的重新平衡。将<code>session.timeout.ms</code>设置得更高将减少意外重新平衡的可能性，但也意味着需要更长时间才能检测到真正的故障。</li>
+</ul>
+<h3 id="auto-offset-reset"><a href="#auto-offset-reset" class="headerlink" title="auto.offset.reset"></a>auto.offset.reset</h3><p>此属性控制消费者在开始读取其没有提交的偏移量的分区时的行为，或者它所拥有的提交的偏移量是否无效（通常是因为消费者长时间失败以至于具有该偏移量的记录是很早之前的数据了）。默认值为“latest”，这意味着缺少有效的偏移量，消费者将从最新的记录开始读取（消费者开始运行后写入的记录）。替代方案是“earliest”，这意味着缺少有效的偏移量，消费者将从一开始就读取分区中的所有数据。</p>
+<h3 id="enable-auto-commit"><a href="#enable-auto-commit" class="headerlink" title="enable.auto.commit"></a>enable.auto.commit</h3><p>此参数控制使用者是否自动提交偏移量，默认为true。如果您希望控制何时提交偏移量，则将其设置为false，这对于最小化重复并避免丢失数据是必要的。如果将<code>enable.auto.commit</code>设置为true，那么您可能还想控制使用<code>auto.commit.interval.ms</code>提交偏移的频率。</p>
+<h3 id="partition-assignment-strategy"><a href="#partition-assignment-strategy" class="headerlink" title="partition.assignment.strategy"></a>partition.assignment.strategy</h3><p><code>partition.assignment.strategy</code>允许您选择分区分配策略。默认值为<code>org.apache.kafka.clients.consumer.RangeAssignor</code>，它实现上述Range策略。您可以将其替换为<code>org.apache.kafka.clients.consumer.RoundRobinAssignor</code>。更高级的选项是实现您自己的分配策略，在这种情况下，<code>partition.assignment.strategy</code>应指向您的类的名称。</p>
+<p><code>PartitionAssignor</code>是一个类，在给定的消费者和主题的情况下，决定将哪些分区分配给哪个消费者。默认情况下，Kafka有两个分配策略：</p>
+<ul>
+<li><strong>Range</strong><br>为每个消费者分配其订阅的每个主题的连续分区子集。因此，如果消费者C1和C2订阅了两个主题T1和T2，并且每个主题都有三个分区，则C1将从主题T1和T2分配0和1分区，而C2将从这些主题分配分区2 。由于每个主题的分区数量不均匀，并且每个主题的分配都是独立完成的，因此第一个消费者最终会得到比第二个更多的分区。只要使用Range赋值且消费者数量不能巧妙地划分每个主题中的分区数，就会发生这种情况。</li>
+<li><strong>RoundRobin</strong><br>从所有订阅的主题中获取所有分区，并按顺序逐个分配给消费者。如果先前描述的C1和C2使用RoundRobin赋值，则C1将具有来自主题T1的分区0和2以及来自主题T2的分区1。 C2将具有来自主题T1的分区1以及来自主题T2的分区0和2。通常，如果所有消费者都订阅了相同的主题（非常常见的情况），则RoundRobin分配最终会使所有消费者具有相同数量的分区（或最多1个分区差异）。</li>
+</ul>
+<h3 id="client-id"><a href="#client-id" class="headerlink" title="client.id"></a>client.id</h3><p>这可以是任何字符串，并且代理将使用它来标识从客户端发送的消息。它用于记录和指标。</p>
+<h3 id="max-poll-records"><a href="#max-poll-records" class="headerlink" title="max.poll.records"></a>max.poll.records</h3><p>这将控制对poll()的单次调用将返回的最大记录数。这有助于控制应用程序在轮询循环中需要处理的数据量。</p>
+<h3 id="receive-buffer-bytes-amp-send-buffer-bytes"><a href="#receive-buffer-bytes-amp-send-buffer-bytes" class="headerlink" title="receive.buffer.bytes &amp; send.buffer.bytes"></a>receive.buffer.bytes &amp; send.buffer.bytes</h3><p>这些是写入和读取数据时套接字使用的TCP发送和接收缓冲区的大小。如果这些设置为-1，则将使用操作系统默认值。当生产者或消费者与不同数据中心的代理进行通信时，增加这些内容可能是个好主意，因为这些网络链接通常具有更高的延迟和更低的带宽。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/kafka、MQ/" rel="tag"># kafka、MQ</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/03/Kafka系列/6.Kafka消费者和消费者组/" rel="next" title="Kafka消费者和消费者组">
+                <i class="fa fa-chevron-left"></i> Kafka消费者和消费者组
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/03/Kafka系列/8.Kafka消息消费/" rel="prev" title="Kafka消息消费">
+                Kafka消息消费 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/timg.png" alt="greenHard">
+            
+              <p class="site-author-name" itemprop="name">greenHard</p>
+              <p class="site-description motion-element" itemprop="description">做个有梦想的咸鱼</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#客户端开发"><span class="nav-number">1.</span> <span class="nav-text">客户端开发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#必要的参数配置"><span class="nav-number">2.</span> <span class="nav-text">必要的参数配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#订阅主题和分区"><span class="nav-number">3.</span> <span class="nav-text">订阅主题和分区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#重要的参数配置"><span class="nav-number">4.</span> <span class="nav-text">重要的参数配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fetch-min-bytes"><span class="nav-number">4.1.</span> <span class="nav-text">fetch.min.bytes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#fetch-max-wait-ms"><span class="nav-number">4.2.</span> <span class="nav-text">fetch.max.wait.ms</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#max-partition-fetch-bytes"><span class="nav-number">4.3.</span> <span class="nav-text">max.partition.fetch.bytes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#session-timeout-ms"><span class="nav-number">4.4.</span> <span class="nav-text">session.timeout.ms</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#auto-offset-reset"><span class="nav-number">4.5.</span> <span class="nav-text">auto.offset.reset</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#enable-auto-commit"><span class="nav-number">4.6.</span> <span class="nav-text">enable.auto.commit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#partition-assignment-strategy"><span class="nav-number">4.7.</span> <span class="nav-text">partition.assignment.strategy</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#client-id"><span class="nav-number">4.8.</span> <span class="nav-text">client.id</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#max-poll-records"><span class="nav-number">4.9.</span> <span class="nav-text">max.poll.records</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#receive-buffer-bytes-amp-send-buffer-bytes"><span class="nav-number">4.10.</span> <span class="nav-text">receive.buffer.bytes &amp; send.buffer.bytes</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">greenHard</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://铜豌豆6号.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://yoursite.com/2019/05/03/Kafka系列/7.Kafka消费者开发/';
+          this.page.identifier = '2019/05/03/Kafka系列/7.Kafka消费者开发/';
+          this.page.title = 'Kafka消费者客户端开发';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://铜豌豆6号.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("OnzY68wYNuEreJmz6UKQ6WDi-gzGzoHsz", "1B6bWk99L50mdp8qQsktSQWK");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>

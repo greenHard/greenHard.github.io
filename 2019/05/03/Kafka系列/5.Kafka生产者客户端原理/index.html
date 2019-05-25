@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="kafka、MQ,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="1. 整体架构下面我们来看一下生产者客户端的整体架构，如下图所示。  整个生产者客户端由两个线程协调运行，这两个线程分别为主线程和 Sender 线程（发送线程）。在主线程中由 KafkaProducer 创建消息，然后通过可能的拦截器、序列化器和分区器的作用之后缓存到消息累加器（RecordAccumulator，也称为消息收集器）中。Sender 线程负责从 RecordAccumulator">
+<meta name="keywords" content="kafka、MQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="生产者客户端原理解析">
+<meta property="og:url" content="http://yoursite.com/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/index.html">
+<meta property="og:site_name" content="greenHard的个人主页">
+<meta property="og:description" content="1. 整体架构下面我们来看一下生产者客户端的整体架构，如下图所示。  整个生产者客户端由两个线程协调运行，这两个线程分别为主线程和 Sender 线程（发送线程）。在主线程中由 KafkaProducer 创建消息，然后通过可能的拦截器、序列化器和分区器的作用之后缓存到消息累加器（RecordAccumulator，也称为消息收集器）中。Sender 线程负责从 RecordAccumulator">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/1.png">
+<meta property="og:image" content="http://yoursite.com/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/2.png">
+<meta property="og:updated_time" content="2019-05-25T04:37:56.243Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="生产者客户端原理解析">
+<meta name="twitter:description" content="1. 整体架构下面我们来看一下生产者客户端的整体架构，如下图所示。  整个生产者客户端由两个线程协调运行，这两个线程分别为主线程和 Sender 线程（发送线程）。在主线程中由 KafkaProducer 创建消息，然后通过可能的拦截器、序列化器和分区器的作用之后缓存到消息累加器（RecordAccumulator，也称为消息收集器）中。Sender 线程负责从 RecordAccumulator">
+<meta name="twitter:image" content="http://yoursite.com/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/">
+
+
+
+
+
+  <title>生产者客户端原理解析 | greenHard的个人主页</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">greenHard的个人主页</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-schedule">
+          <a href="/schedule/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>
+            
+            日程表
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="greenHard">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/timg.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="greenHard的个人主页">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">生产者客户端原理解析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-03T15:16:00+08:00">
+                2019-05-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Kafka学习笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">Kafka学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/05/03/Kafka系列/5.Kafka生产者客户端原理/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/" class="leancloud_visitors" data-flag-title="生产者客户端原理解析">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1-整体架构"><a href="#1-整体架构" class="headerlink" title="1. 整体架构"></a>1. 整体架构</h2><p>下面我们来看一下生产者客户端的整体架构，如下图所示。</p>
+<p><img src="/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/1.png" alt></p>
+<p>整个生产者客户端由两个线程协调运行，这两个线程分别为主线程和 Sender 线程（发送线程）。在主线程中由 <code>KafkaProducer</code> 创建消息，然后通过可能的拦截器、序列化器和分区器的作用之后缓存到消息累加器（<code>RecordAccumulator</code>，也称为消息收集器）中。Sender 线程负责从 <code>RecordAccumulator</code> 中获取消息并将其发送到 Kafka 中。</p>
+<h3 id="1-1-KafkaProducer"><a href="#1-1-KafkaProducer" class="headerlink" title="1.1 KafkaProducer"></a>1.1 KafkaProducer</h3><h4 id="1-1-1-doSend"><a href="#1-1-1-doSend" class="headerlink" title="1.1.1 doSend"></a>1.1.1 doSend</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">RecordAccumulator.RecordAppendResult result = accumulator.append(tp, timestamp, serializedKey,serializedValue, headers, interceptCallback, remainingWaitMs);</span><br><span class="line">    <span class="keyword">if</span> (result.batchIsFull || result.newBatchCreated) &#123;</span><br><span class="line">        log.trace(<span class="string">"Waking up the sender since topic &#123;&#125; partition &#123;&#125; is either full or getting a new batch"</span>, record.topic(), partition);</span><br><span class="line">        <span class="keyword">this</span>.sender.wakeup();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-2-RecordAccumulator"><a href="#1-2-RecordAccumulator" class="headerlink" title="1.2 RecordAccumulator"></a>1.2 RecordAccumulator</h3><h4 id="1-2-1-append"><a href="#1-2-1-append" class="headerlink" title="1.2.1 append"></a>1.2.1 append</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;TopicPartition, Deque&lt;ProducerBatch&gt;&gt; batches;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> RecordAppendResult <span class="title">append</span><span class="params">(TopicPartition tp,</span></span></span><br><span class="line"><span class="function"><span class="params">                                 <span class="keyword">long</span> timestamp,</span></span></span><br><span class="line"><span class="function"><span class="params">                                 <span class="keyword">byte</span>[] key,</span></span></span><br><span class="line"><span class="function"><span class="params">                                 <span class="keyword">byte</span>[] value,</span></span></span><br><span class="line"><span class="function"><span class="params">                                 Header[] headers,</span></span></span><br><span class="line"><span class="function"><span class="params">                                 Callback callback,</span></span></span><br><span class="line"><span class="function"><span class="params">                                 <span class="keyword">long</span> maxTimeToBlock)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="comment">// We keep track of the number of appending thread to make sure we do not miss batches in</span></span><br><span class="line">    <span class="comment">// abortIncompleteBatches().</span></span><br><span class="line">    appendsInProgress.incrementAndGet();</span><br><span class="line">    ByteBuffer buffer = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">if</span> (headers == <span class="keyword">null</span>) headers = Record.EMPTY_HEADERS;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// check if we have an in-progress batch</span></span><br><span class="line">        Deque&lt;ProducerBatch&gt; dq = getOrCreateDeque(tp);</span><br><span class="line">        <span class="keyword">synchronized</span> (dq) &#123;</span><br><span class="line">            <span class="keyword">if</span> (closed)</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> KafkaException(<span class="string">"Producer closed while send in progress"</span>);</span><br><span class="line">            RecordAppendResult appendResult = tryAppend(timestamp, key, value, headers, callback, dq);</span><br><span class="line">            <span class="keyword">if</span> (appendResult != <span class="keyword">null</span>)</span><br><span class="line">                <span class="keyword">return</span> appendResult;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// we don't have an in-progress record batch try to allocate a new batch</span></span><br><span class="line">        <span class="keyword">byte</span> maxUsableMagic = apiVersions.maxUsableProduceMagic();</span><br><span class="line">        <span class="keyword">int</span> size = Math.max(<span class="keyword">this</span>.batchSize, AbstractRecords.estimateSizeInBytesUpperBound(maxUsableMagic, compression, key, value, headers));</span><br><span class="line">        log.trace(<span class="string">"Allocating a new &#123;&#125; byte message buffer for topic &#123;&#125; partition &#123;&#125;"</span>, size, tp.topic(), tp.partition());</span><br><span class="line">        buffer = free.allocate(size, maxTimeToBlock);</span><br><span class="line">        <span class="keyword">synchronized</span> (dq) &#123;</span><br><span class="line">            <span class="comment">// Need to check if producer is closed again after grabbing the dequeue lock.</span></span><br><span class="line">            <span class="keyword">if</span> (closed)</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> KafkaException(<span class="string">"Producer closed while send in progress"</span>);</span><br><span class="line"></span><br><span class="line">            RecordAppendResult appendResult = tryAppend(timestamp, key, value, headers, callback, dq);</span><br><span class="line">            <span class="keyword">if</span> (appendResult != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// Somebody else found us a batch, return the one we waited for! Hopefully this doesn't happen often...</span></span><br><span class="line">                <span class="keyword">return</span> appendResult;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            MemoryRecordsBuilder recordsBuilder = recordsBuilder(buffer, maxUsableMagic);</span><br><span class="line">            ProducerBatch batch = <span class="keyword">new</span> ProducerBatch(tp, recordsBuilder, time.milliseconds());</span><br><span class="line">            FutureRecordMetadata future = Utils.notNull(batch.tryAppend(timestamp, key, value, headers, callback, time.milliseconds()));</span><br><span class="line"></span><br><span class="line">            dq.addLast(batch);</span><br><span class="line">            incomplete.add(batch);</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Don't deallocate this buffer in the finally block as it's being used in the record batch</span></span><br><span class="line">            buffer = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> RecordAppendResult(future, dq.size() &gt; <span class="number">1</span> || batch.isFull(), <span class="keyword">true</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (buffer != <span class="keyword">null</span>)</span><br><span class="line">            free.deallocate(buffer);</span><br><span class="line">        appendsInProgress.decrementAndGet();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-2-2-getOrCreateDeque"><a href="#1-2-2-getOrCreateDeque" class="headerlink" title="1.2.2 getOrCreateDeque"></a>1.2.2 getOrCreateDeque</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Get the deque for the given topic-partition, creating it if necessary.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> Deque&lt;ProducerBatch&gt; <span class="title">getOrCreateDeque</span><span class="params">(TopicPartition tp)</span> </span>&#123;</span><br><span class="line">    Deque&lt;ProducerBatch&gt; d = <span class="keyword">this</span>.batches.get(tp);</span><br><span class="line">    <span class="keyword">if</span> (d != <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">return</span> d;</span><br><span class="line">    d = <span class="keyword">new</span> ArrayDeque&lt;&gt;();</span><br><span class="line">    Deque&lt;ProducerBatch&gt; previous = <span class="keyword">this</span>.batches.putIfAbsent(tp, d);</span><br><span class="line">    <span class="keyword">if</span> (previous == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">return</span> d;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> previous;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>RecordAccumulator</code> 主要用来缓存消息以便 Sender 线程可以批量发送，进而减少网络传输的资源消耗以提升性能。<code>RecordAccumulator</code> 缓存的大小可以通过生产者客户端参数 <code>buffer.memory</code> 配置，默认值为 33554432B，即32MB。如果生产者发送消息的速度超过发送到服务器的速度，则会导致生产者空间不足，这个时候 <code>KafkaProducer</code> 的 send() 方法调用要么被阻塞，要么抛出异常，这个取决于参数 <code>max.block.ms</code> 的配置，此参数的默认值为60000，即60秒。</p>
+<p>主线程中发送过来的消息都会被追加到 <code>RecordAccumulator</code> 的某个双端队列（Deque）中，在 <code>RecordAccumulator</code> 的内部为每个分区都维护了一个双端队列，队列中的内容就是 <code>ProducerBatch</code>，即 Deque。消息写入缓存时，追加到双端队列的尾部；Sender 读取消息时，从双端队列的头部读取。注意 <code>ProducerBatch</code>不是 <code>ProducerRecord</code>，<code>ProducerBatch</code>中可以包含一至多个 <code>ProducerRecord</code>。通俗地说，<code>ProducerRecord</code> 是生产者中创建的消息，而 <code>ProducerBatch</code> 是指一个消息批次，<code>ProducerRecord</code> 会被包含在 <code>ProducerBatch</code> 中，这样可以使字节的使用更加紧凑。与此同时，将较小的 <code>ProducerRecord</code> 拼凑成一个较大的 <code>ProducerBatch</code>，也可以减少网络请求的次数以提升整体的吞吐量。如果生产者客户端需要向很多分区发送消息，则可以将 <code>buffer.memory</code> 参数适当调大以增加整体的吞吐量。</p>
+<p>消息在网络上都是以字节（Byte）的形式传输的，在发送之前需要创建一块内存区域来保存对应的消息。在 Kafka 生产者客户端中，通过<code>java.io.ByteBuffer</code> 实现消息内存的创建和释放。不过频繁的创建和释放是比较耗费资源的，在 <code>RecordAccumulator</code>的内部还有一个<code>BufferPool</code>，它主要用来实现 <code>ByteBuffer</code> 的复用，以实现缓存的高效利用。不过 <code>BufferPool</code> 只针对特定大小的 <code>ByteBuffer</code>进行管理，而其他大小的 <code>ByteBuffer</code> 不会缓存进 <code>BufferPool</code> 中，这个特定的大小由 <code>batch.size</code> 参数来指定，默认值为16384B，即16KB。我们可以适当地调大 <code>batch.size</code> 参数以便多缓存一些消息。</p>
+<p><code>ProducerBatch</code> 的大小和 <code>batch.size</code> 参数也有着密切的关系。当一条消息（<code>ProducerRecord</code>）流入 <code>RecordAccumulator</code> 时，会先寻找与消息分区所对应的双端队列（如果没有则新建），再从这个双端队列的尾部获取一个 <code>ProducerBatch</code>（如果没有则新建），查看 <code>ProducerBatch</code> 中是否还可以写入这个 <code>ProducerRecord</code>，如果可以则写入，如果不可以则需要创建一个新的 <code>ProducerBatch</code>。在新建 <code>ProducerBatch</code> 时评估这条消息的大小是否超过 batch.size 参数的大小，如果不超过，那么就以 <code>batch.size</code> 参数的大小来创建 <code>ProducerBatch</code>，这样在使用完这段内存区域之后，可以通过 <code>BufferPool</code> 的管理来进行复用；如果超过，那么就以评估的大小来创建 <code>ProducerBatch</code>，这段内存区域不会被复用。</p>
+<h3 id="1-3-Sender"><a href="#1-3-Sender" class="headerlink" title="1.3 Sender"></a>1.3 Sender</h3><h4 id="1-3-1-run"><a href="#1-3-1-run" class="headerlink" title="1.3.1 run"></a>1.3.1 run</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">run</span><span class="params">(<span class="keyword">long</span> now)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">long</span> pollTimeout = sendProducerData(now);</span><br><span class="line">    client.poll(pollTimeout, now);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-3-2-sendProducerData"><a href="#1-3-2-sendProducerData" class="headerlink" title="1.3.2 sendProducerData"></a>1.3.2 sendProducerData</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">long</span> <span class="title">sendProducerData</span><span class="params">(<span class="keyword">long</span> now)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// ... 元数据更新</span></span><br><span class="line">    </span><br><span class="line">        <span class="comment">// 移除不需要发送消息的结点</span></span><br><span class="line">        Iterator&lt;Node&gt; iter = result.readyNodes.iterator();</span><br><span class="line">        <span class="keyword">long</span> notReadyTimeout = Long.MAX_VALUE;</span><br><span class="line">        <span class="keyword">while</span> (iter.hasNext()) &#123;</span><br><span class="line">            Node node = iter.next();</span><br><span class="line">            <span class="keyword">if</span> (!<span class="keyword">this</span>.client.ready(node, now)) &#123;</span><br><span class="line">                iter.remove();</span><br><span class="line">                notReadyTimeout = Math.min(notReadyTimeout, <span class="keyword">this</span>.client.pollDelayMs(node, now));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// create produce requests</span></span><br><span class="line">        Map&lt;Integer, List&lt;ProducerBatch&gt;&gt; batches = <span class="keyword">this</span>.accumulator.drain(cluster, result.readyNodes, <span class="keyword">this</span>.maxRequestSize, now);</span><br><span class="line">        addToInflightBatches(batches);</span><br><span class="line">        <span class="keyword">if</span> (guaranteeMessageOrder) &#123;</span><br><span class="line">            <span class="comment">// Mute all the partitions drained</span></span><br><span class="line">            <span class="keyword">for</span> (List&lt;ProducerBatch&gt; batchList : batches.values()) &#123;</span><br><span class="line">                <span class="keyword">for</span> (ProducerBatch batch : batchList)</span><br><span class="line">                    <span class="keyword">this</span>.accumulator.mutePartition(batch.topicPartition);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 发送生产请求</span></span><br><span class="line">        sendProduceRequests(batches, now);</span><br><span class="line">        <span class="keyword">return</span> pollTimeout;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-3-3-addToInflightBatches"><a href="#1-3-3-addToInflightBatches" class="headerlink" title="1.3.3 addToInflightBatches"></a>1.3.3 addToInflightBatches</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// A per-partition queue of batches ordered by creation time for tracking the in-flight batches</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;TopicPartition, List&lt;ProducerBatch&gt;&gt; inFlightBatches;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">addToInflightBatches</span><span class="params">(List&lt;ProducerBatch&gt; batches)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (ProducerBatch batch : batches) &#123;</span><br><span class="line">        List&lt;ProducerBatch&gt; inflightBatchList =inFlightBatches.get(batch.topicPartition);</span><br><span class="line">        <span class="keyword">if</span> (inflightBatchList == <span class="keyword">null</span>) &#123;</span><br><span class="line">            inflightBatchList = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">            inFlightBatches.put(batch.topicPartition, inflightBatchList);</span><br><span class="line">        &#125;</span><br><span class="line">        inflightBatchList.add(batch);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Sender 从 <code>RecordAccumulator</code>中获取缓存的消息之后，会进一步将原本&lt;分区, Deque&lt; ProducerBatch&gt;&gt; 的保存形式转变成 <node, list< producerbatch> 的形式，其中 Node 表示 Kafka 集群的 broker 节点。对于网络连接来说，生产者客户端是与具体的 broker 节点建立的连接，也就是向具体的 broker 节点发送消息，而并不关心消息属于哪一个分区；而对于 <code>KafkaProducer</code> 的应用逻辑而言，我们只关注向哪个分区中发送哪些消息，所以在这里需要做一个应用逻辑层面到网络I/O层面的转换。</node,></p>
+<p>在转换成 <node, list> 的形式之后，Sender 还会进一步封装成 <node, request> 的形式，这样就可以将 Request 请求发往各个 Node 了，这里的 Request 是指 Kafka 的各种协议请求，对于消息发送而言就是指具体的 <code>ProduceRequest</code>。</node,></node,></p>
+<h3 id="1-4-NetworkClient"><a href="#1-4-NetworkClient" class="headerlink" title="1.4 NetworkClient"></a>1.4 NetworkClient</h3><h4 id="1-4-1-doSend"><a href="#1-4-1-doSend" class="headerlink" title="1.4.1 doSend"></a>1.4.1 doSend</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doSend</span><span class="params">(ClientRequest clientRequest, <span class="keyword">boolean</span> isInternalRequest, <span class="keyword">long</span> now, AbstractRequest request)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">    Send send = request.toSend(destination, header);</span><br><span class="line">    InFlightRequest inFlightRequest = <span class="keyword">new</span> InFlightRequest(</span><br><span class="line">        clientRequest,</span><br><span class="line">        header,</span><br><span class="line">        isInternalRequest,</span><br><span class="line">        request,</span><br><span class="line">        send,</span><br><span class="line">        now);</span><br><span class="line">    <span class="keyword">this</span>.inFlightRequests.add(inFlightRequest);</span><br><span class="line">    selector.send(send);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>请求在从 Sender 线程发往 Kafka 之前还会保存到 <code>InFlightRequests</code> 中，InFlightRequests 保存对象的具体形式为 Map<nodeid, deque>，它的主要作用是缓存了已经发出去但还没有收到响应的请求（NodeId 是一个 String 类型，表示节点的 id 编号）。与此同时，<code>InFlightRequests</code>还提供了许多管理类的方法，并且通过配置参数还可以限制每个连接（也就是客户端与 Node 之间的连接）最多缓存的请求数。这个配置参数为 <code>max.in.flight.requests.per.connection</code>，默认值为5，即每个连接最多只能缓存5个未响应的请求，超过该数值之后就不能再向这个连接发送更多的请求了，除非有缓存的请求收到了响应（Response）。通过比较 Deque 的 size 与这个参数的大小来判断对应的 Node 中是否已经堆积了很多未响应的消息，如果真是如此，那么说明这个 Node 节点负载较大或网络连接有问题，再继续向其发送请求会增大请求超时的可能。</nodeid,></p>
+<h2 id="2-元数据的更新"><a href="#2-元数据的更新" class="headerlink" title="2. 元数据的更新"></a>2. 元数据的更新</h2><p>前面提及的<code>InFlightRequests</code> 还可以获得 <code>leastLoadedNode</code>，即所有 Node 中负载最小的那一个。这里的负载最小是通过每个 Node 在 <code>InFlightRequests</code>中还未确认的请求决定的，未确认的请求越多则认为负载越大。对于下图中的 <code>InFlightRequests</code> 来说，图中展示了三个节点 Node0、Node1和Node2，很明显 Node1 的负载最小。也就是说，Node1 为当前的 <code>leastLoadedNode</code>。选择 <code>leastLoadedNode</code> 发送请求可以使它能够尽快发出，避免因网络拥塞等异常而影响整体的进度。<code>leastLoadedNode</code> 的概念可以用于多个应用场合，比如元数据请求、消费者组播协议的交互。</p>
+<p><img src="/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/2.png" alt></p>
+<p>我们使用如下的方式创建了一条消息 <code>ProducerRecord</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ProducerRecord&lt;String, String&gt; record = <span class="keyword">new</span> ProducerRecord&lt;&gt;(topic, <span class="string">"Hello, Kafka!"</span>);</span><br></pre></td></tr></table></figure>
+<p>我们只知道主题的名称，对于其他一些必要的信息却一无所知。<code>KafkaProducer</code> 要将此消息追加到指定主题的某个分区所对应的 leader 副本之前，首先需要知道主题的分区数量，然后经过计算得出（或者直接指定）目标分区，之后 <code>KafkaProducer</code> 需要知道目标分区的 leader 副本所在的 broker 节点的地址、端口等信息才能建立连接，最终才能将消息发送到 Kafka，在这一过程中所需要的信息都属于元数据信息。</p>
+<p>我们了解了<code>bootstrap.servers</code> 参数只需要配置部分 broker 节点的地址即可，不需要配置所有 broker 节点的地址，因为客户端可以自己发现其他 broker 节点的地址，这一过程也属于元数据相关的更新操作。与此同时，分区数量及 leader 副本的分布都会动态地变化，客户端也需要动态地捕捉这些变化。</p>
+<p>元数据是指 Kafka 集群的元数据，这些元数据具体记录了集群中有哪些主题，这些主题有哪些分区，每个分区的 leader 副本分配在哪个节点上，follower 副本分配在哪些节点上，哪些副本在 AR、ISR 等集合中，集群中有哪些节点，控制器节点又是哪一个等信息。</p>
+<p>当客户端中没有需要使用的元数据信息时，比如没有指定的主题信息，或者超过 <code>metadata.max.age.ms</code>时间没有更新元数据都会引起元数据的更新操作。客户端参数 <code>metadata.max.age.ms</code> 的默认值为300000，即5分钟。元数据的更新操作是在客户端内部进行的，对客户端的外部使用者不可见。当需要更新元数据时，会先挑选出 <code>leastLoadedNode</code>，然后向这个 Node 发送 <code>MetadataRequest</code> 请求来获取具体的元数据信息。这个更新操作是由 Sender 线程发起的，在创建完 <code>MetadataRequest</code> 之后同样会存入 <code>InFlightRequests</code>，之后的步骤就和发送消息时的类似。元数据虽然由 Sender 线程负责更新，但是主线程也需要读取这些信息，这里的数据同步通过 synchronized 和 final 关键字来保障。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/kafka、MQ/" rel="tag"># kafka、MQ</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/03/Kafka系列/4.Kafka序列化-分区器-拦截器/" rel="next" title="Kafka序列化-分区器-拦截器">
+                <i class="fa fa-chevron-left"></i> Kafka序列化-分区器-拦截器
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/03/Kafka系列/6.Kafka消费者和消费者组/" rel="prev" title="Kafka消费者和消费者组">
+                Kafka消费者和消费者组 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/timg.png" alt="greenHard">
+            
+              <p class="site-author-name" itemprop="name">greenHard</p>
+              <p class="site-description motion-element" itemprop="description">做个有梦想的咸鱼</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-整体架构"><span class="nav-number">1.</span> <span class="nav-text">1. 整体架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-KafkaProducer"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 KafkaProducer</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-1-doSend"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1.1 doSend</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-RecordAccumulator"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 RecordAccumulator</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-1-append"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.2.1 append</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-2-getOrCreateDeque"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2.2 getOrCreateDeque</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-Sender"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 Sender</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-1-run"><span class="nav-number">1.3.1.</span> <span class="nav-text">1.3.1 run</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-2-sendProducerData"><span class="nav-number">1.3.2.</span> <span class="nav-text">1.3.2 sendProducerData</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-3-addToInflightBatches"><span class="nav-number">1.3.3.</span> <span class="nav-text">1.3.3 addToInflightBatches</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-NetworkClient"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 NetworkClient</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-1-doSend"><span class="nav-number">1.4.1.</span> <span class="nav-text">1.4.1 doSend</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-元数据的更新"><span class="nav-number">2.</span> <span class="nav-text">2. 元数据的更新</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">greenHard</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://铜豌豆6号.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://yoursite.com/2019/05/03/Kafka系列/5.Kafka生产者客户端原理/';
+          this.page.identifier = '2019/05/03/Kafka系列/5.Kafka生产者客户端原理/';
+          this.page.title = '生产者客户端原理解析';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://铜豌豆6号.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("OnzY68wYNuEreJmz6UKQ6WDi-gzGzoHsz", "1B6bWk99L50mdp8qQsktSQWK");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>

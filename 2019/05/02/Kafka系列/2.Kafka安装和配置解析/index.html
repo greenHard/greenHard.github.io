@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="kafka、MQ,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Kafka下载 http://kafka.apache.org/  http://kafka.apache.org/documentation/  https://www.apache.org/dyn/closer.cgi?path=/kafka/2.2.0/kafka_2.12-2.2.0.tgz   Kafka安装Kafka独立安装 Kafka伪分布式安装 Kafka分布式安装  安装地址:">
+<meta name="keywords" content="kafka、MQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kafka安装和配置解析">
+<meta property="og:url" content="http://yoursite.com/2019/05/02/Kafka系列/2.Kafka安装和配置解析/index.html">
+<meta property="og:site_name" content="greenHard的个人主页">
+<meta property="og:description" content="Kafka下载 http://kafka.apache.org/  http://kafka.apache.org/documentation/  https://www.apache.org/dyn/closer.cgi?path=/kafka/2.2.0/kafka_2.12-2.2.0.tgz   Kafka安装Kafka独立安装 Kafka伪分布式安装 Kafka分布式安装  安装地址:">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2019/05/02/Kafka系列/2.Kafka安装和配置解析/1.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/05/02/Kafka系列/2.Kafka安装和配置解析/2.jpg">
+<meta property="og:image" content="http://yoursite.com/2019/05/02/Kafka系列/2.Kafka安装和配置解析/3.jpg">
+<meta property="og:updated_time" content="2019-05-25T04:21:29.425Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kafka安装和配置解析">
+<meta name="twitter:description" content="Kafka下载 http://kafka.apache.org/  http://kafka.apache.org/documentation/  https://www.apache.org/dyn/closer.cgi?path=/kafka/2.2.0/kafka_2.12-2.2.0.tgz   Kafka安装Kafka独立安装 Kafka伪分布式安装 Kafka分布式安装  安装地址:">
+<meta name="twitter:image" content="http://yoursite.com/2019/05/02/Kafka系列/2.Kafka安装和配置解析/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/05/02/Kafka系列/2.Kafka安装和配置解析/">
+
+
+
+
+
+  <title>Kafka安装和配置解析 | greenHard的个人主页</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">greenHard的个人主页</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-schedule">
+          <a href="/schedule/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-calendar"></i> <br>
+            
+            日程表
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/05/02/Kafka系列/2.Kafka安装和配置解析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="greenHard">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/timg.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="greenHard的个人主页">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Kafka安装和配置解析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-02T11:37:00+08:00">
+                2019-05-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Kafka学习笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">Kafka学习笔记</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/05/02/Kafka系列/2.Kafka安装和配置解析/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/05/02/Kafka系列/2.Kafka安装和配置解析/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2019/05/02/Kafka系列/2.Kafka安装和配置解析/" class="leancloud_visitors" data-flag-title="Kafka安装和配置解析">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Kafka下载"><a href="#Kafka下载" class="headerlink" title="Kafka下载"></a>Kafka下载</h2><ul>
+<li><p><a href="http://kafka.apache.org/" target="_blank" rel="noopener">http://kafka.apache.org/</a></p>
+</li>
+<li><p><a href="http://kafka.apache.org/documentation/" target="_blank" rel="noopener">http://kafka.apache.org/documentation/</a></p>
+</li>
+<li><p><a href="https://www.apache.org/dyn/closer.cgi?path=/kafka/2.2.0/kafka_2.12-2.2.0.tgz" target="_blank" rel="noopener">https://www.apache.org/dyn/closer.cgi?path=/kafka/2.2.0/kafka_2.12-2.2.0.tgz</a></p>
+</li>
+</ul>
+<h2 id="Kafka安装"><a href="#Kafka安装" class="headerlink" title="Kafka安装"></a>Kafka安装</h2><h3 id="Kafka独立安装"><a href="#Kafka独立安装" class="headerlink" title="Kafka独立安装"></a>Kafka独立安装</h3><p><img src="/2019/05/02/Kafka系列/2.Kafka安装和配置解析/1.jpg" alt></p>
+<h3 id="Kafka伪分布式安装"><a href="#Kafka伪分布式安装" class="headerlink" title="Kafka伪分布式安装"></a>Kafka伪分布式安装</h3><p><img src="/2019/05/02/Kafka系列/2.Kafka安装和配置解析/2.jpg" alt></p>
+<h3 id="Kafka分布式安装"><a href="#Kafka分布式安装" class="headerlink" title="Kafka分布式安装"></a>Kafka分布式安装</h3><p><img src="/2019/05/02/Kafka系列/2.Kafka安装和配置解析/3.jpg" alt></p>
+<blockquote>
+<p>安装地址: <a href="http://kafka.apache.org/documentation/#quickstart" target="_blank" rel="noopener">http://kafka.apache.org/documentation/#quickstart</a></p>
+</blockquote>
+<h2 id="Broker基础配置解析"><a href="#Broker基础配置解析" class="headerlink" title="Broker基础配置解析"></a>Broker基础配置解析</h2><h3 id="1-broker-id"><a href="#1-broker-id" class="headerlink" title="1. broker.id"></a>1. broker.id</h3><p>此服务器的代理 id。如果取消设置, 将生成唯一的代理 id。为了避免zookeeper 生成的代理 id 和用户配置的代理 id 之间的冲突, 生成的代理 id 从 reserved.broker.max.id + 1 开始。</p>
+<h3 id="2-port"><a href="#2-port" class="headerlink" title="2. port"></a>2. port</h3><p>DEPRECATED: 至少在未设置 <code>listeners</code>  时才使用。改为使用  <code>listeners</code> 。端口, 以侦听和接受连接。</p>
+<h3 id="3-listeners"><a href="#3-listeners" class="headerlink" title="3. listeners"></a>3. listeners</h3><p>该参数指明 broker 监听客户端连接的地址列表，即为客户端要连接 broker 的入口地址列表，配置格式为 protocol1://hostname1:port1,protocol2://hostname2:port2，其中 protocol 代表协议类型，Kafka 当前支持的协议类型有 PLAINTEXT、SSL、SASL_SSL 等，如果未开启安全认证，则使用简单的 PLAINTEXT 即可。hostname 代表主机名，port 代表服务端口，此参数的默认值为 null。比如此参数配置为 PLAINTEXT://198.162.0.2:9092，如果有多个地址，则中间以逗号隔开。如果不指定主机名，则表示绑定默认网卡，注意有可能会绑定到127.0.0.1，这样无法对外提供服务，所以主机名最好不要为空；如果主机名是0.0.0.0，则表示绑定所有的网卡。</p>
+<h3 id="4-zookeeper-connect"><a href="#4-zookeeper-connect" class="headerlink" title="4. zookeeper.connect"></a>4. zookeeper.connect</h3><p>该参数指明 broker 要连接的 ZooKeeper 集群的服务地址（包含端口号），没有默认值，且此参数为必填项。可以配置为 localhost:2181，如果 ZooKeeper 集群中有多个节点，则可以用逗号将每个节点隔开，类似于 localhost1:2181,localhost2:2181,localhost3:2181 这种格式。最佳的实践方式是再加一个 chroot 路径，这样既可以明确指明该 chroot 路径下的节点是为 Kafka 所用的，也可以实现多个 Kafka 集群复用一套 ZooKeeper 集群，这样可以节省更多的硬件资源。包含 chroot 路径的配置类似于 localhost1:2181,localhost2:2181,localhost3:2181/kafka 这种，如果不指定 chroot，那么默认使用 ZooKeeper 的根路径。</p>
+<h3 id="5-log-dir和log-dirs"><a href="#5-log-dir和log-dirs" class="headerlink" title="5. log.dir和log.dirs"></a>5. log.dir和log.dirs</h3><p>Kafka 把所有的消息都保存在磁盘上，而这两个参数用来配置 Kafka 日志文件存放的根目录。一般情况下，log.dir 用来配置单个根目录，而 log.dirs 用来配置多个根目录（以逗号分隔），但是 Kafka 并没有对此做强制性限制，也就是说，log.dir 和 log.dirs 都可以用来配置单个或多个根目录。log.dirs 的优先级比 log.dir 高，但是如果没有配置 log.dirs，则会以 log.dir 配置为准。默认情况下只配置了 log.dir 参数，其默认值为 /tmp/kafka-logs。</p>
+<h3 id="6-num-recovery-threads-per-data-dir"><a href="#6-num-recovery-threads-per-data-dir" class="headerlink" title="6.num.recovery.threads.per.data.dir"></a>6.num.recovery.threads.per.data.dir</h3><p>每个数据目录的线程数, 用于启动时的日志恢复和关机时的刷新</p>
+<ul>
+<li>Kafka 使用可配置的线程池来处理日志段。默认使用当前线程池</li>
+<li>正常启动时, 打开每个分区的日志段</li>
+<li>失败后启动时, 检查并截断每个分区的日志段</li>
+<li>关机时, 要干净地关闭日志段</li>
+<li>默认情况下, 每个日志目录仅使用一个线程。由于这些线程仅在启动和关闭期间使用, 因此为了并行化操作, 设置更多的线程是合理的。</li>
+</ul>
+<h3 id="7-auto-create-topics-enable"><a href="#7-auto-create-topics-enable" class="headerlink" title="7. auto.create.topics.enable"></a>7. auto.create.topics.enable</h3><p>在服务器上启用主题的自动创建</p>
+<ul>
+<li>Kafka 的默认配置指定在以下情况下, broker 自动创建主题</li>
+<li>当生成器开始向主题写入消息时</li>
+<li>当使用者开始阅读主题中的消息时</li>
+<li>当任何客户端请求该主题的元数据时</li>
+</ul>
+<h3 id="8-num-partitions"><a href="#8-num-partitions" class="headerlink" title="8. num.partitions"></a>8. num.partitions</h3><p>每个主题的默认日志分区数</p>
+<ul>
+<li>num.partitions参数确定创建新主题的分区数, 主要是在启用自动主题创建时 (这是默认设置)。此参数默认为一个分区。请记住, 主题的分区数只能增加, 而不会减少。这意味着, 如果某个主题需要比 num.partitions少, 则需要注意手动创建该主题。</li>
+</ul>
+<h3 id="9-log-retention-ms"><a href="#9-log-retention-ms" class="headerlink" title="9. log.retention.ms"></a>9. log.retention.ms</h3><p>在删除日志文件之前保留日志文件的毫秒数 (以毫秒为单位), 如果未设置, 则使用 log.retention.minutes 的值</p>
+<h3 id="10-log-retention-minutes"><a href="#10-log-retention-minutes" class="headerlink" title="10. log.retention.minutes"></a>10. log.retention.minutes</h3><p>删除日志文件之前保留日志文件的分钟数 (以分钟为中心), 仅次于 log.retention.ms 属性。如果未设置, 则使用 log.retention.hours 中的值</p>
+<h3 id="11-log-retention-hours"><a href="#11-log-retention-hours" class="headerlink" title="11. log.retention.hours"></a>11. log.retention.hours</h3><p>删除日志文件之前保留日志文件的小时数 (以小时为个时间), 请按 log.retention.ms 属性。默认值168</p>
+<h3 id="12-log-retention-bytes"><a href="#12-log-retention-bytes" class="headerlink" title="12. log.retention.bytes"></a>12. log.retention.bytes</h3><p>删除日志之前的最大大小</p>
+<ul>
+<li>使消息过期的另一种方法基于保留的消息的总字节数。此值是使用 log.retention.bytes 参数设置的, 并应用于每个分区。这意味着, 如果您有一个具有8个分区的主题, 并且 log.retention.bytes 设置为 1 GB, 则为该主题保留的数据量最多为 8 GB。</li>
+</ul>
+<h3 id="13-log-segment-bytes"><a href="#13-log-segment-bytes" class="headerlink" title="13. log.segment.bytes"></a>13. log.segment.bytes</h3><p>日志段上的日志保留设置, 而不是单个消息。当消息生成到Kafka broker, 它们将追加到分区的当前日志段中。日志段达到 log.segment.bytes 参数指定的大小 (默认值为 1 GB) 后, 日志段将关闭并打开一个新的日志段。日志段关闭后, 可以考虑将其过期。较小的日志段大小意味着必须更频繁地关闭和分配文件, 从而降低了磁盘写入的整体效率。如果主题的生成率较低, 则调整日志段的大小可能很重要。例如, 如果某个主题每天只收到100兆字节的消息, 并且 log.segment.bytes 设置为默认值, 则需要10天的时间来填充一个段。由于在日志段关闭之前消息无法过期, 因此如果 log.retention.ms 设置为 604800000 (1周), 则实际上将保留长达17天的消息, 直到关闭的日志段过期。这是因为, 一旦日志段关闭当前10天的消息, 该日志段必须保留 7天, 然后根据时间策略过期 (因为该段不能删除, 直到段中的最后一条消息可以过期)。</p>
+<h3 id="14-log-segment-ms"><a href="#14-log-segment-ms" class="headerlink" title="14. log.segment.ms"></a>14. log.segment.ms</h3><p>控制日志段何时关闭的另一种方法是使用 log.segment.ms 参数, 该参数指定日志段关闭后的时间量。与 log.retention.bytes 和 log.retention.ms 参数一样, log.segment.bytes 和 log.segment.ms 不是相互排斥的属性。Kafka 将在达到大小限制或达到时间限制时关闭日志段, 以时间在前者为准。默认情况下, 没有 log.segment.ms 的设置, 这将导致仅按大小关闭日志段。</p>
+<h3 id="15-message-max-bytes"><a href="#15-message-max-bytes" class="headerlink" title="15. message.max.bytes"></a>15. message.max.bytes</h3><p> Kafka broker限制message.max.bytes 参数配置的消息的最大大小, 该参数默认为1000012或 1 MB。试图发送大于此范围的消息的生成器将收到来自broker的错误, 并且该消息将不被接受。</p>
+<h2 id="如何选择Broker数量？"><a href="#如何选择Broker数量？" class="headerlink" title="如何选择Broker数量？"></a>如何选择Broker数量？</h2><ul>
+<li>要考虑的第一个因素是保留消息需要多少磁盘容量, 以及单个broker上有多少可用的存储空间。</li>
+<li>要考虑的另一个因素是群集处理请求的能力。例如, 什么是网络接口的容量, 如果数据有多个使用者, 或者在数据的保留期内流量不一致, 它们是否可以处理客户端流量。</li>
+</ul>
+<h2 id="如何选择分区数量？"><a href="#如何选择分区数量？" class="headerlink" title="如何选择分区数量？"></a>如何选择分区数量？</h2><ul>
+<li><p>您希望为该主题实现的吞吐量是多少？</p>
+</li>
+<li><p>如果要根据keys将消息发送到分区, 则以后添加分区可能非常具有挑战性, 因此, 请根据预期的未来使用情况 (而不是当前使用情况) 计算吞吐量。</p>
+</li>
+<li><p>考虑您将放置在每个broker上的分区数以及每个broker的可用磁盘空间和网络带宽。</p>
+</li>
+<li><p>避免高估, 因为每个分区使用broker的内存和其他资源, 并将增加领导人选举的时间。</p>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/kafka、MQ/" rel="tag"># kafka、MQ</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/01/Kafka系列/1.Kafka介绍/" rel="next" title="Kafka介绍">
+                <i class="fa fa-chevron-left"></i> Kafka介绍
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/02/Kafka系列/3.Kafka生产者开发/" rel="prev" title="Kafka生产者开发">
+                Kafka生产者开发 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/timg.png" alt="greenHard">
+            
+              <p class="site-author-name" itemprop="name">greenHard</p>
+              <p class="site-description motion-element" itemprop="description">做个有梦想的咸鱼</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Kafka下载"><span class="nav-number">1.</span> <span class="nav-text">Kafka下载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kafka安装"><span class="nav-number">2.</span> <span class="nav-text">Kafka安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka独立安装"><span class="nav-number">2.1.</span> <span class="nav-text">Kafka独立安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka伪分布式安装"><span class="nav-number">2.2.</span> <span class="nav-text">Kafka伪分布式安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka分布式安装"><span class="nav-number">2.3.</span> <span class="nav-text">Kafka分布式安装</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Broker基础配置解析"><span class="nav-number">3.</span> <span class="nav-text">Broker基础配置解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-broker-id"><span class="nav-number">3.1.</span> <span class="nav-text">1. broker.id</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-port"><span class="nav-number">3.2.</span> <span class="nav-text">2. port</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-listeners"><span class="nav-number">3.3.</span> <span class="nav-text">3. listeners</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-zookeeper-connect"><span class="nav-number">3.4.</span> <span class="nav-text">4. zookeeper.connect</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-log-dir和log-dirs"><span class="nav-number">3.5.</span> <span class="nav-text">5. log.dir和log.dirs</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-num-recovery-threads-per-data-dir"><span class="nav-number">3.6.</span> <span class="nav-text">6.num.recovery.threads.per.data.dir</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-auto-create-topics-enable"><span class="nav-number">3.7.</span> <span class="nav-text">7. auto.create.topics.enable</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-num-partitions"><span class="nav-number">3.8.</span> <span class="nav-text">8. num.partitions</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-log-retention-ms"><span class="nav-number">3.9.</span> <span class="nav-text">9. log.retention.ms</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-log-retention-minutes"><span class="nav-number">3.10.</span> <span class="nav-text">10. log.retention.minutes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#11-log-retention-hours"><span class="nav-number">3.11.</span> <span class="nav-text">11. log.retention.hours</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#12-log-retention-bytes"><span class="nav-number">3.12.</span> <span class="nav-text">12. log.retention.bytes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#13-log-segment-bytes"><span class="nav-number">3.13.</span> <span class="nav-text">13. log.segment.bytes</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#14-log-segment-ms"><span class="nav-number">3.14.</span> <span class="nav-text">14. log.segment.ms</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#15-message-max-bytes"><span class="nav-number">3.15.</span> <span class="nav-text">15. message.max.bytes</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何选择Broker数量？"><span class="nav-number">4.</span> <span class="nav-text">如何选择Broker数量？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何选择分区数量？"><span class="nav-number">5.</span> <span class="nav-text">如何选择分区数量？</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">greenHard</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://铜豌豆6号.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://yoursite.com/2019/05/02/Kafka系列/2.Kafka安装和配置解析/';
+          this.page.identifier = '2019/05/02/Kafka系列/2.Kafka安装和配置解析/';
+          this.page.title = 'Kafka安装和配置解析';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://铜豌豆6号.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("OnzY68wYNuEreJmz6UKQ6WDi-gzGzoHsz", "1B6bWk99L50mdp8qQsktSQWK");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+</body>
+</html>
